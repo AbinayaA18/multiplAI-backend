@@ -1,0 +1,7 @@
+# .gitignore
+.env
+zure_config.env
+__pycache__/
+*.pyc
+*.sqlite3
+.DS_Store
