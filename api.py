@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 # -------------------------------------------------
 # FastAPI + CORS SETUP
 # -------------------------------------------------
+load_dotenv(dotenv_path=r"D:\multipl-api\zure_config.env")
 
 app = FastAPI()
 
@@ -37,22 +38,14 @@ app.add_middleware(
 # AZURE CONFIG (from Suresh)
 # -------------------------------------------------
 
-
-load_dotenv()
-
 tenant_id = os.getenv("AZURE_TENANT_ID")
 client_id = os.getenv("AZURE_CLIENT_ID")
 client_secret = os.getenv("AZURE_CLIENT_SECRET")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 API_KEY = os.getenv("API_KEY")
 
-myEndpoint = "https://suresh-3120-multiplyfinancials-r.services.ai.azure.com/api/projects/suresh-3120-multiplyfinancials"
-
+myEndpoint = os.getenv("AZURE_PROJECT_ENDPOINT")
 # Project endpoint (without the stray %22 at the end)
-AZURE_PROJECT_ENDPOINT = (
-    "https://suresh-3120-multiplyfinancials-r.services.ai.azure.com"
-    "/api/projects/suresh-3120-multiplyfinancials"
-)
 
 # Known Azure agent names
 AZURE_PERSONA_NAME = "03-Personas"
@@ -88,11 +81,6 @@ project_client = AIProjectClient(
 )
 
 openai_client = project_client.get_openai_client()
-# token_provider = get_bearer_token_provider(
-#     credential,
-#     "https://ai.azure.com/.default"
-# )
-# print("token", token_provider())
 
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -375,18 +363,6 @@ def get_user_agents(request: AgentPhoneRequest):
         endpoint_path=record.get("endpoint_path"),
         agent_status=record.get("agent_status"),
     )
-
-
-# @app.post("/get-agents")
-# def get_agents(request: AgentsRequest, db: Session = Depends(get_db)):
-#     phone = request.phone
-#     try:
-#         agents_list = fetch_agents_from_azure(phone)  # Step 1
-#         save_agents_to_db(db, phone, agents_list)     # Step 2
-#         return {"phone": phone, "agents": agents_list}
-#     except Exception as e:
-#         return {"error": str(e)}
-
 @app.post("/get-all-agents")
 def get_all_agents(db: Session = Depends(get_db)):
     try:
@@ -512,23 +488,6 @@ class FoundryAgentChat:
         self._send_message(thread_id, message)
         self._run_agent(thread_id)
         return self._get_agent_response(thread_id)
-
-# PROJECT_NAME = "suresh-3120-multiplyfinancials"
-# AGENT_ID = "01-Persona:2"
-# ENDPOINT = "https://suresh-3120-multiplyfinancials-r.services.ai.azure.com"
-
-# agent = FoundryAgentChat(PROJECT_NAME, AGENT_ID, ENDPOINT)
-# reply = agent.chat("Hello! Can you introduce yourself?")
-# print("Agent Reply:", reply)
-
-# @app.post("/chat")
-# def chat(req: ChatRequest):
-#     try:
-#         reply = agent.chat(req.message)
-#         return {"reply": reply}
-#     except Exception as e:
-#         return {"error": str(e)}
-
 @app.post("/chat")
 async def chat(body: ChatBody):
     """

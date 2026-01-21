@@ -4,4 +4,11 @@ zure_config.env
 __pycache__/
 *.pyc
 *.sqlite3
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env
+.idea/
 .DS_Store
