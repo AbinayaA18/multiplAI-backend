@@ -15,3 +15,5 @@ venv/
 .env
 .env
 zure_config.env
+.env
+zure_config.env
