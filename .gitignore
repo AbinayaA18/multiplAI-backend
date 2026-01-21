@@ -17,3 +17,5 @@ venv/
 zure_config.env
 .env
 zure_config.env
+# .gitignore
+api.py
