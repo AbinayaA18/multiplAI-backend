@@ -288,6 +288,8 @@ async def root():
 def get_user_agents(request: AgentPhoneRequest):
     existing = supabase.table("agent_phone_scope_map_sam") \
                        .select("*") \
+                       .eq("phone_e164", request.phone) \
+                       .eq("Status", 'A')\
                        .execute()
     print("request.phone", request.phone)
     print("existing", existing)
