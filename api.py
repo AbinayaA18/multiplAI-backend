@@ -294,22 +294,28 @@ def get_user_agents(request: AgentPhoneRequest):
 
     if not existing.data:
         return []
+    
 
-    record = existing.data[0]
-    print("record", record)
-    return AgentResponse(
-        id=UUID(record["id"]),
-        tenant_id=record.get("tenant_id"),
-        phone_e164=record["phone_e164"],
-        agent_id=json.loads(record.get("agent_id") or "[]"),
-        agent_name=json.loads(record.get("agent_name") or "[]"),
-        allowed_scopes=record.get("allowed_scopes") or [],
-        endpoint_url=record.get("endpoint_url"),
-        endpoint_protocol=record.get("endpoint_protocol"),
-        endpoint_port=record.get("endpoint_port"),
-        endpoint_path=record.get("endpoint_path"),
-        agent_status=record.get("agent_status"),
-    )
+    responses: List[AgentResponse] = []
+
+    for record in existing.data:
+        responses.append(
+            AgentResponse(
+                id=UUID(record["id"]),
+                tenant_id=record.get("tenant_id"),
+                phone_e164=record["phone_e164"],
+                agent_id= record.get("agent_id"),
+                agent_name=record.get("agent_name"),
+                allowed_scopes=record.get("allowed_scopes") or [],
+                endpoint_url=record.get("endpoint_url"),
+                endpoint_protocol=record.get("endpoint_protocol"),
+                endpoint_port=record.get("endpoint_port"),
+                endpoint_path=record.get("endpoint_path"),
+                agent_status=record.get("agent_status"),
+            )
+        )
+
+    return responses
 
 
 # @app.post("/get-agents")
