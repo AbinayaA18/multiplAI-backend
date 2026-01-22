@@ -19,3 +19,4 @@ zure_config.env
 zure_config.env
 # .gitignore
 api.py
+.env

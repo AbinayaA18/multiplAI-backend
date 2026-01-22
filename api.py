@@ -38,6 +38,9 @@ app.add_middleware(
 # AZURE CONFIG (from Suresh)
 # -------------------------------------------------
 
+
+load_dotenv()
+
 tenant_id = os.getenv("AZURE_TENANT_ID")
 client_id = os.getenv("AZURE_CLIENT_ID")
 client_secret = os.getenv("AZURE_CLIENT_SECRET")
@@ -136,8 +139,8 @@ class AgentResponse(BaseModel):
     id: UUID
     tenant_id: str | None
     phone_e164: str
-    agent_id: List[str]
-    agent_name: List[str]
+    agent_id: str
+    agent_name: str
     allowed_scopes: List[str]
     endpoint_url: Optional[str] = None
     endpoint_protocol: Optional[str] = None
@@ -153,21 +156,6 @@ class AgentPhoneRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-# -------------------------------------------------
-# HELPERS
-# -------------------------------------------------
-
-# client = FoundryAgentChat(
-#     endpoint="https://suresh-3120-multiplyfinancials-r.services.ai.azure.com",
-#     credential=credential
-# )
-# agent_request = {
-#     "input": [{"role": "user", "content": "Tell me a joke"}]
-# }
-# response = project_client.agents.send_request(
-#     agent_id="01-Persona:2",
-#     request=agent_request
-# )
 
 # print(response)
 
@@ -296,54 +284,13 @@ def list_deployments():
 async def root():
     return {"status": "ok", "message": "MultipIAI backend is running"}
 
-
-# @app.post("/chat")
-# async def chat(body: ChatBody):
-#     """
-#     Receives: { "message": "...", "agentId": "persona|financials|industry|outlook" }
-#     Uses the mapped Azure agent and returns: { "reply": "..." }
-#     """
-#     try:
-#         # 1) Map frontend agentId -> Azure agent name
-#         # agent_name = _resolve_agent_name_from_frontend_value(body.agentId)
-#         # print("agent_name: ", agent_name)
-
-#         agent_obj = project_client.agents.get_agent(agent_id=body.agentId)
-
-#         # Convert to dict for JSON
-#         agent_info = {
-#             "id": agent_obj.id,
-#             "name": agent_obj.name,
-#             "model": agent_obj.model,
-#             "instructions": agent_obj.instructions,
-#             "created_at": agent_obj.created_at,
-#         }
-#         response = openai_client.responses.create(
-#             input=[{"role": "user", "content": body.message}],
-#             extra_body={"agent": {"name": agent_info.id, "type": "agent_reference"}},
-#         )
-
-#         print("response: ", response.output_text)
-
-
-#         # 4) Return the plain text output
-#         return {
-#             "agent": agent_info,
-#             "reply": response.output_text
-#         }
-
-#     except Exception as e:
-#         # If Azure fails, don't crash – just send the message back to the client
-#         print("Azure error:", repr(e))
-#         return {"reply": f"Azure error: {e}"}
-
-
-@app.post("/get-user-agents", response_model=AgentResponse)
+@app.post("/get-user-agents", response_model=List[AgentResponse])
 def get_user_agents(request: AgentPhoneRequest):
-    existing = supabase.table("agent_phone_scope_map") \
+    existing = supabase.table("agent_phone_scope_map_sam") \
                        .select("*") \
-                       .eq("phone_e164", request.phone) \
                        .execute()
+    print("request.phone", request.phone)
+    print("existing", existing)
 
     if not existing.data:
         return []
@@ -363,6 +310,18 @@ def get_user_agents(request: AgentPhoneRequest):
         endpoint_path=record.get("endpoint_path"),
         agent_status=record.get("agent_status"),
     )
+
+
+# @app.post("/get-agents")
+# def get_agents(request: AgentsRequest, db: Session = Depends(get_db)):
+#     phone = request.phone
+#     try:
+#         agents_list = fetch_agents_from_azure(phone)  # Step 1
+#         save_agents_to_db(db, phone, agents_list)     # Step 2
+#         return {"phone": phone, "agents": agents_list}
+#     except Exception as e:
+#         return {"error": str(e)}
+
 @app.post("/get-all-agents")
 def get_all_agents(db: Session = Depends(get_db)):
     try:
@@ -488,6 +447,23 @@ class FoundryAgentChat:
         self._send_message(thread_id, message)
         self._run_agent(thread_id)
         return self._get_agent_response(thread_id)
+
+# PROJECT_NAME = "suresh-3120-multiplyfinancials"
+# AGENT_ID = "01-Persona:2"
+# ENDPOINT = "https://suresh-3120-multiplyfinancials-r.services.ai.azure.com"
+
+# agent = FoundryAgentChat(PROJECT_NAME, AGENT_ID, ENDPOINT)
+# reply = agent.chat("Hello! Can you introduce yourself?")
+# print("Agent Reply:", reply)
+
+# @app.post("/chat")
+# def chat(req: ChatRequest):
+#     try:
+#         reply = agent.chat(req.message)
+#         return {"reply": reply}
+#     except Exception as e:
+#         return {"error": str(e)}
+
 @app.post("/chat")
 async def chat(body: ChatBody):
     """
